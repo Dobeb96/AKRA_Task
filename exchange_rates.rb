@@ -1,15 +1,17 @@
 require 'json'
 require 'net/http'
+require 'digest'
 
 EXCHANGE_API_URL = 'https://api.exchangeratesapi.io/latest'
 class ExchangeRates
   def initialize
     uri = URI(EXCHANGE_API_URL)
-    json_api = Net::HTTP.get(uri)
-    @api = JSON.parse(json_api)
+    api_json = Net::HTTP.get(uri)
+    @api = JSON.parse(api_json)
 
     print_all_currencies(order: :desc)
     print_extremum_rates
+    save_to_file(api_json)
   end
 
   private
@@ -30,8 +32,9 @@ class ExchangeRates
     puts "Highest rate #{sorted_rates.last.join(': ')}, lowest rate #{sorted_rates.first.join(': ')}"
   end
 
-  def save_to_file
-
+  def save_to_file(data)
+    data_hash = Digest::MD5.hexdigest(data)
+    File.write("#{data_hash}.json", data) && puts('Saved to file!')
   end
 end
 
