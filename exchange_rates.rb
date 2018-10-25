@@ -1,6 +1,12 @@
+require 'json'
+require 'net/http'
+
+EXCHANGE_API_URL = 'https://api.exchangeratesapi.io/latest'
 class ExchangeRates
   def initialize
-
+    uri = URI(EXCHANGE_API_URL)
+    json_api = Net::HTTP.get(uri)
+    @api = JSON.parse(json_api)
   end
 
   private
