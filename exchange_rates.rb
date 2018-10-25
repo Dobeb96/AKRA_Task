@@ -2,39 +2,44 @@ require 'json'
 require 'net/http'
 require 'digest'
 
-EXCHANGE_API_URL = 'https://api.exchangeratesapi.io/latest'
 class ExchangeRates
+  EXCHANGE_API_URL = 'https://api.exchangeratesapi.io/latest'
+
   def initialize
     uri = URI(EXCHANGE_API_URL)
     api_json = Net::HTTP.get(uri)
     @api = JSON.parse(api_json)
 
-    print_all_currencies(order: :desc)
-    print_extremum_rates
-    save_to_file(api_json)
+    puts "Comma separated list of currencies:\n%s" % currencies(order: :desc).join(', ')
+    puts "Highest rate (%s), lowest rate (%s)" % [maximum_rate.join(': '), minimum_rate.join(': ')]
+    save_to_file(api_json) && puts('Saved to file!')
   end
 
   private
 
-  # OPTIONS: order: [:asc / :desc]
-  def print_all_currencies(options)
+  # REQUIRED OPTIONS: (order: [:asc / :desc])
+  def currencies(options)
     sorting = options[:order]
-
-    sorted_rates = @api['rates'].map {|k, _| k }.sort
-    sorted_rates.reverse! if sorting == :desc
-
-    puts 'Comma separated list of currencies:'
-    puts sorted_rates.join(', ')
+    sorted_currencies = @api['rates'].map {|k, _| k}.sort
+    sorted_currencies.reverse! if sorting == :desc
+    sorted_currencies
   end
 
-  def print_extremum_rates
-    sorted_rates = @api['rates'].sort_by {|_, v| v }
-    puts "Highest rate #{sorted_rates.last.join(': ')}, lowest rate #{sorted_rates.first.join(': ')}"
+  def maximum_rate
+    sorted_rates.last
+  end
+
+  def minimum_rate
+    sorted_rates.first
+  end
+
+  def sorted_rates
+    @api['rates'].sort_by {|_, v| v}
   end
 
   def save_to_file(data)
     data_hash = Digest::MD5.hexdigest(data)
-    File.write("#{data_hash}.json", data) && puts('Saved to file!')
+    File.write("#{data_hash}.json", data)
   end
 end
 
