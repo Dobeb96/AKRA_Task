@@ -9,6 +9,7 @@ class ExchangeRates
     @api = JSON.parse(json_api)
 
     print_all_currencies(order: :desc)
+    print_extremum_rates
   end
 
   private
@@ -25,7 +26,8 @@ class ExchangeRates
   end
 
   def print_extremum_rates
-
+    sorted_rates = @api['rates'].sort_by {|_, v| v }
+    puts "Highest rate #{sorted_rates.last.join(': ')}, lowest rate #{sorted_rates.first.join(': ')}"
   end
 
   def save_to_file
